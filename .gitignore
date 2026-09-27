@@ -1,0 +1,22 @@
+# dependencies
+/node_modules
+/.pnpm-store
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# local files
+.DS_Store
+*.log
+
+# typescript
+*.tsbuildinfo
+
+# unrelated local research files
+/outputs/
+/scripts/
+/tmp/
