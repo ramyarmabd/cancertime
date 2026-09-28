@@ -43,8 +43,10 @@ export default function MethodologyPage() {
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate">On this page</p>
             <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-2 text-sm font-semibold text-slate lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:border-l lg:border-line lg:px-0 lg:pb-0">
               <a href="#treatment" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Treatment & transfusion</a>
+              <a href="#frequency" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Visit frequency</a>
+              <a href="#combined" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Combined planner</a>
               <a href="#caregiver" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Caregiver time</a>
-              <a href="#schedule-range" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Schedule end point</a>
+              <a href="#schedule-range" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Estimate period</a>
               <a href="#example" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Worked example</a>
               <a href="#limitations" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Limitations</a>
               <a href="#references" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">References</a>
@@ -67,6 +69,36 @@ export default function MethodologyPage() {
               <p className="mt-5 text-sm leading-6 text-slate">If the transfusion accompaniment option is selected, caregiver hours equal the patient’s estimated visit and travel hours. Combined person-hours add both people’s time without suggesting the patient personally spends the combined amount.</p>
             </section>
 
+            <section id="frequency" className="mt-16 scroll-mt-28 border-t border-line pt-14">
+              <p className="section-kicker">Visit frequency</p>
+              <h2 className="mt-3 font-serif text-3xl font-bold text-ink">Converting schedules to a monthly average</h2>
+              <p className="mt-5 leading-8 text-slate">CancerTime accepts common schedules and converts them to an average number of visits per month before estimating totals.</p>
+              <dl className="mt-8 border-t border-line">
+                {[
+                  ["Each week", "visits × 52 weeks ÷ 12 months"],
+                  ["Every 2 weeks", "visits × 26 intervals ÷ 12 months"],
+                  ["Every 3 weeks", "visits × (52 ÷ 3) intervals ÷ 12 months"],
+                  ["Each month", "visits entered directly"],
+                ].map(([term, equation]) => (
+                  <div key={term} className="grid gap-2 border-b border-line py-5 sm:grid-cols-[0.9fr_1.1fr] sm:gap-8">
+                    <dt className="font-semibold text-ink">{term}</dt>
+                    <dd className="font-mono text-sm leading-6 text-teal">{equation}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-5 text-sm leading-6 text-slate">These conversions describe an average. Actual calendar months contain different numbers of days and appointments may be rescheduled.</p>
+            </section>
+
+            <section id="combined" className="mt-16 scroll-mt-28 border-t border-line pt-14">
+              <p className="section-kicker">Combined care planner</p>
+              <h2 className="mt-3 font-serif text-3xl font-bold text-ink">Adding several types of care</h2>
+              <p className="mt-5 leading-8 text-slate">Each activity—such as treatment, lab work, imaging, or transfusion—is calculated from its own frequency and duration. CancerTime then adds care-location time and travel across all rows.</p>
+              <div className="mt-7 rounded-3xl bg-wash/35 p-6 text-sm leading-7 text-slate">
+                <p><strong className="text-ink">Grouped trips:</strong> when an activity is marked as happening on the same trip as the row above, its care-location time is included but its travel time is set to zero. This avoids intentionally counting the same trip twice.</p>
+                <p className="mt-3">Only group rows when those activities usually happen together. The planner does not infer shared trips automatically.</p>
+              </div>
+            </section>
+
             <section id="caregiver" className="mt-16 scroll-mt-6 border-t border-line pt-14">
               <p className="section-kicker">Caregiver time</p>
               <h2 className="mt-3 font-serif text-3xl font-bold text-ink">Visit-related and additional support</h2>
@@ -87,9 +119,9 @@ export default function MethodologyPage() {
             </section>
 
             <section id="schedule-range" className="mt-16 scroll-mt-28 border-t border-line pt-14">
-              <p className="section-kicker">Schedule end point</p>
-              <h2 className="mt-3 font-serif text-3xl font-bold text-ink">Estimating a defined course of care</h2>
-              <p className="mt-5 leading-8 text-slate">By default, CancerTime shows a one-year estimate. If a schedule has a known end point, the calculator can instead estimate the total time through that point.</p>
+              <p className="section-kicker">Estimate period</p>
+              <h2 className="mt-3 font-serif text-3xl font-bold text-ink">One month, one year, or a defined course</h2>
+              <p className="mt-5 leading-8 text-slate">Every calculator asks which period the total should cover. One month provides a short-term view, one year provides an annual view, and a defined course estimates time through a chosen end point.</p>
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 {[
                   ["Visits", "Uses the number of visits directly. Estimated elapsed months = total visits ÷ visits per month."],

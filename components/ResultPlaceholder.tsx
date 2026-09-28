@@ -1,4 +1,4 @@
-export function ResultPlaceholder({ calculator }: { calculator: string }) {
+export function ResultPlaceholder({ prompt }: { prompt: string }) {
   return (
     <div className="flex min-h-72 items-center justify-center rounded-[2rem] border border-dashed border-line bg-surface/70 p-6 text-center shadow-sm sm:p-8">
       <div className="max-w-sm">
@@ -8,7 +8,7 @@ export function ResultPlaceholder({ calculator }: { calculator: string }) {
         </svg>
         <p className="mt-5 font-serif text-2xl font-bold text-ink">Your estimate will appear here</p>
         <p className="mt-3 text-base leading-7 text-slate">
-          Complete all {calculator} fields with valid values. Zero is accepted.
+          {prompt}
         </p>
       </div>
     </div>

@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   calculateCaregiverTime,
   calculateCaregiverTimeRange,
+  calculateCombinedCarePlan,
   calculateTransfusionTime,
   calculateTreatmentTime,
   calculateVisitTimeRange,
+  frequencyToVisitsPerMonth,
 } from "../lib/calculations";
 
 describe("calculateTreatmentTime", () => {
@@ -106,6 +108,21 @@ describe("calculateVisitTimeRange", () => {
   });
 });
 
+describe("frequencyToVisitsPerMonth", () => {
+  it("converts common visit schedules to monthly averages", () => {
+    expect(frequencyToVisitsPerMonth({ value: 1, unit: "week" })).toBeCloseTo(52 / 12);
+    expect(frequencyToVisitsPerMonth({ value: 1, unit: "two-weeks" })).toBeCloseTo(26 / 12);
+    expect(frequencyToVisitsPerMonth({ value: 1, unit: "three-weeks" })).toBeCloseTo(52 / 36);
+    expect(frequencyToVisitsPerMonth({ value: 4, unit: "month" })).toBe(4);
+  });
+
+  it("rejects a frequency that exceeds the monthly safety limit", () => {
+    expect(() =>
+      frequencyToVisitsPerMonth({ value: 100, unit: "week" }),
+    ).toThrow("Average visits per month");
+  });
+});
+
 describe("calculateTransfusionTime", () => {
   it("calculates the documented transfusion example", () => {
     expect(
@@ -193,5 +210,41 @@ describe("calculateCaregiverTimeRange", () => {
 
     expect(result.durationMonths).toBe(6);
     expect(result.totalHours).toBe(150);
+  });
+});
+
+describe("calculateCombinedCarePlan", () => {
+  it("adds activities and does not double-count travel for a shared trip", () => {
+    const result = calculateCombinedCarePlan(
+      [
+        {
+          label: "Treatment",
+          visitsPerMonth: 2,
+          centerHoursPerVisit: 4,
+          travelHoursPerVisit: 1,
+          sharesTravel: false,
+        },
+        {
+          label: "Lab work",
+          visitsPerMonth: 2,
+          centerHoursPerVisit: 0.5,
+          travelHoursPerVisit: 1,
+          sharesTravel: true,
+        },
+      ],
+      { value: 1, unit: "months" },
+    );
+
+    expect(result.activityOccurrences).toBe(4);
+    expect(result.centerHours).toBe(9);
+    expect(result.travelHours).toBe(2);
+    expect(result.totalHours).toBe(11);
+    expect(result.activities[1].travelHours).toBe(0);
+  });
+
+  it("requires a time-based range because visit counts are ambiguous across rows", () => {
+    expect(() =>
+      calculateCombinedCarePlan([], { value: 8, unit: "visits" }),
+    ).toThrow("must use weeks, months, or years");
   });
 });

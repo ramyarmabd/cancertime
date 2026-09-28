@@ -28,24 +28,34 @@ export function TimeBreakdown({
       <p className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-slate">
         {heading}
       </p>
-      <div className="space-y-5">
+      <div className="flex h-4 overflow-hidden rounded-full bg-wash" aria-hidden="true">
         {items.map((item) => {
           const width = total === 0 ? 0 : (item.value / total) * 100;
-
           return (
-            <div key={item.label}>
-              <div className="mb-2 flex items-baseline justify-between gap-4 text-sm">
-                <span className="font-medium text-ink">{item.label}</span>
-                <span className="whitespace-nowrap text-slate">
-                  {formatNumber(item.value)} hours
-                </span>
-              </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-wash" aria-hidden="true">
-                <div
-                  className={item.color === "navy" ? "h-full rounded-full bg-navy" : "h-full rounded-full bg-teal"}
-                  style={{ width: `${width}%` }}
+            <div
+              key={item.label}
+              className={item.color === "navy" ? "h-full bg-navy" : "h-full bg-teal"}
+              style={{ width: `${width}%` }}
+            />
+          );
+        })}
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {items.map((item) => {
+          const percentage = total === 0 ? 0 : (item.value / total) * 100;
+          return (
+            <div key={item.label} className="flex items-start justify-between gap-4 rounded-2xl bg-canvas px-4 py-3 text-sm">
+              <span className="flex min-w-0 items-center gap-2 font-semibold text-ink">
+                <span
+                  aria-hidden="true"
+                  className={`size-2.5 shrink-0 rounded-full ${item.color === "navy" ? "bg-navy" : "bg-teal"}`}
                 />
-              </div>
+                {item.label}
+              </span>
+              <span className="shrink-0 text-right text-slate">
+                <strong className="font-semibold text-ink">{formatNumber(percentage)}%</strong>
+                <span className="block">{formatNumber(item.value)} hr</span>
+              </span>
             </div>
           );
         })}

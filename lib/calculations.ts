@@ -4,6 +4,17 @@ export interface VisitTimeInput {
   travelHoursPerVisit: number;
 }
 
+export type VisitFrequencyUnit =
+  | "week"
+  | "two-weeks"
+  | "three-weeks"
+  | "month";
+
+export interface VisitFrequencyInput {
+  value: number;
+  unit: VisitFrequencyUnit;
+}
+
 export interface VisitTimeResult {
   visitsPerYear: number;
   centerHoursPerYear: number;
@@ -54,6 +65,31 @@ export interface CaregiverTimeRangeResult {
   durationMonths: number;
 }
 
+export interface CarePlanActivityInput extends VisitTimeInput {
+  label: string;
+  sharesTravel: boolean;
+}
+
+export interface CarePlanActivityResult {
+  label: string;
+  visits: number;
+  centerHours: number;
+  travelHours: number;
+  totalHours: number;
+  sharesTravel: boolean;
+}
+
+export interface CombinedCarePlanResult {
+  activities: CarePlanActivityResult[];
+  activityOccurrences: number;
+  centerHours: number;
+  travelHours: number;
+  totalHours: number;
+  hoursPerMonth: number;
+  eightHourDays: number;
+  durationMonths: number;
+}
+
 export const INPUT_LIMITS = {
   visitsPerMonth: 100,
   hoursPerVisit: 24,
@@ -76,6 +112,20 @@ function assertInRange(value: number, name: string, maximum: number) {
   if (value < 0 || value > maximum) {
     throw new RangeError(`${name} must be between 0 and ${maximum}.`);
   }
+}
+
+export function frequencyToVisitsPerMonth(input: VisitFrequencyInput) {
+  assertInRange(input.value, "Visit frequency", INPUT_LIMITS.visitsPerMonth);
+  const monthly =
+    input.unit === "week"
+      ? input.value * (52 / 12)
+      : input.unit === "two-weeks"
+        ? input.value * (26 / 12)
+        : input.unit === "three-weeks"
+          ? input.value * (52 / 36)
+          : input.value;
+  assertInRange(monthly, "Average visits per month", INPUT_LIMITS.visitsPerMonth);
+  return monthly;
 }
 
 function validateVisitInput(input: VisitTimeInput) {
@@ -114,7 +164,10 @@ function validateCaregiverInput(input: CaregiverTimeInput) {
   );
 }
 
-function rangeDurationMonths(range: ScheduleRange, visitsPerMonth: number) {
+export function rangeDurationMonths(
+  range: ScheduleRange,
+  visitsPerMonth: number,
+) {
   assertInRange(range.value, "Schedule range", RANGE_LIMITS[range.unit]);
 
   if (range.unit === "visits") {
@@ -226,6 +279,61 @@ export function calculateCaregiverTimeRange(
     visitsInRange,
     visitHoursInRange,
     additionalHoursInRange,
+    totalHours,
+    hoursPerMonth: durationMonths === 0 ? 0 : totalHours / durationMonths,
+    eightHourDays: totalHours / 8,
+    durationMonths,
+  };
+}
+
+export function calculateCombinedCarePlan(
+  activities: CarePlanActivityInput[],
+  range: ScheduleRange,
+): CombinedCarePlanResult {
+  if (range.unit === "visits") {
+    throw new RangeError(
+      "A combined care plan must use weeks, months, or years for its estimate period.",
+    );
+  }
+
+  const durationMonths = rangeDurationMonths(range, 0);
+  const activityResults = activities.map((activity) => {
+    validateVisitInput(activity);
+    const visits = activity.visitsPerMonth * durationMonths;
+    const centerHours = visits * activity.centerHoursPerVisit;
+    const travelHours = activity.sharesTravel
+      ? 0
+      : visits * activity.travelHoursPerVisit;
+
+    return {
+      label: activity.label,
+      visits,
+      centerHours,
+      travelHours,
+      totalHours: centerHours + travelHours,
+      sharesTravel: activity.sharesTravel,
+    };
+  });
+
+  const activityOccurrences = activityResults.reduce(
+    (sum, activity) => sum + activity.visits,
+    0,
+  );
+  const centerHours = activityResults.reduce(
+    (sum, activity) => sum + activity.centerHours,
+    0,
+  );
+  const travelHours = activityResults.reduce(
+    (sum, activity) => sum + activity.travelHours,
+    0,
+  );
+  const totalHours = centerHours + travelHours;
+
+  return {
+    activities: activityResults,
+    activityOccurrences,
+    centerHours,
+    travelHours,
     totalHours,
     hoursPerMonth: durationMonths === 0 ? 0 : totalHours / durationMonths,
     eightHourDays: totalHours / 8,

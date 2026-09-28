@@ -1,10 +1,10 @@
 # CancerTime
 
-CancerTime is a static, patient-facing calculator for estimating the time devoted to cancer-related treatment, transfusions, and caregiving. It is educational and research-oriented; it does not provide medical advice or recommend care.
+CancerTime is a static, patient-facing calculator for estimating the time devoted to cancer-related treatment, transfusions, caregiving, and combined care schedules. It supports common visit frequencies, hours-and-minutes entry, explicit estimate periods, grouped trips, and opt-in reuse of treatment inputs. It is educational and research-oriented; it does not provide medical advice or recommend care.
 
 ## Local development
 
-Requirements: Node.js 20 or newer and pnpm.
+Requirements: Node.js 22 or newer and pnpm.
 
 ```bash
 pnpm install

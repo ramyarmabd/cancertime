@@ -2,32 +2,39 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import { CaregiverCalculator } from "@/components/CaregiverCalculator";
+import { CombinedCarePlanner } from "@/components/CombinedCarePlanner";
 import {
   emptyScheduleRange,
   type ScheduleRangeFields,
 } from "@/components/ScheduleRangeInput";
 import { TransfusionCalculator } from "@/components/TransfusionCalculator";
 import { TreatmentCalculator } from "@/components/TreatmentCalculator";
+import {
+  emptyCaregiverForm,
+  emptyVisitForm,
+  hasAnyVisitFormValue,
+  hoursToDurationFields,
+  visitFormToInput,
+  type CaregiverFormFields,
+  type VisitFormFields,
+} from "@/lib/form-values";
 
 const calculators = [
-  { id: "treatment", label: "Treatment Time" },
-  { id: "transfusion", label: "Transfusion Time" },
-  { id: "caregiver", label: "Caregiver Time" },
+  { id: "treatment", label: "Treatment" },
+  { id: "transfusion", label: "Transfusion" },
+  { id: "caregiver", label: "Caregiver" },
+  { id: "planner", label: "Care planner" },
 ] as const;
 
 type CalculatorId = (typeof calculators)[number]["id"];
 
-export interface SharedVisitFields {
-  visits: string;
-  center: string;
-  travel: string;
+function cloneVisitForm(fields: VisitFormFields): VisitFormFields {
+  return {
+    frequency: { ...fields.frequency },
+    center: { ...fields.center },
+    travel: { ...fields.travel },
+  };
 }
-
-const emptySharedVisitFields: SharedVisitFields = {
-  visits: "",
-  center: "",
-  travel: "",
-};
 
 function isCalculatorId(value: string): value is CalculatorId {
   return calculators.some((calculator) => calculator.id === value);
@@ -47,6 +54,32 @@ function getServerSnapshot(): CalculatorId {
   return "treatment";
 }
 
+function ImportNotice({ onImport, label }: { onImport: () => void; label: string }) {
+  return (
+    <aside className="mb-4 flex flex-col gap-3 rounded-2xl border border-line/70 bg-wash/25 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <p className="leading-6 text-slate">
+        Reuse your treatment schedule only if it applies here.
+      </p>
+      <button type="button" onClick={onImport} className="button-secondary shrink-0">
+        {label}
+      </button>
+    </aside>
+  );
+}
+
+function ImportedNotice({ onReviewed }: { onReviewed: () => void }) {
+  return (
+    <aside className="mb-4 flex flex-col gap-3 rounded-2xl border border-gold bg-gold/20 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <p className="leading-6 text-ink">
+        <strong>Imported from treatment.</strong> Review these values because this schedule may be different.
+      </p>
+      <button type="button" onClick={onReviewed} className="button-secondary shrink-0">
+        I reviewed them
+      </button>
+    </aside>
+  );
+}
+
 export function CalculatorTabs() {
   const selected = useSyncExternalStore(
     subscribeToHash,
@@ -54,10 +87,17 @@ export function CalculatorTabs() {
     getServerSnapshot,
   );
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const [sharedVisitFields, setSharedVisitFields] =
-    useState<SharedVisitFields>(emptySharedVisitFields);
-  const [sharedRangeFields, setSharedRangeFields] =
-    useState<ScheduleRangeFields>(emptyScheduleRange);
+  const [treatmentFields, setTreatmentFields] = useState<VisitFormFields>(emptyVisitForm);
+  const [treatmentRange, setTreatmentRange] = useState<ScheduleRangeFields>(emptyScheduleRange);
+  const [transfusionFields, setTransfusionFields] = useState<VisitFormFields>(emptyVisitForm);
+  const [transfusionRange, setTransfusionRange] = useState<ScheduleRangeFields>(emptyScheduleRange);
+  const [caregiverFields, setCaregiverFields] = useState<CaregiverFormFields>(emptyCaregiverForm);
+  const [caregiverRange, setCaregiverRange] = useState<ScheduleRangeFields>(emptyScheduleRange);
+  const [transfusionImported, setTransfusionImported] = useState(false);
+  const [caregiverImported, setCaregiverImported] = useState(false);
+
+  const treatmentInput = visitFormToInput(treatmentFields);
+  const canReuseTreatment = hasAnyVisitFormValue(treatmentFields);
 
   function selectTab(id: CalculatorId) {
     window.history.replaceState(null, "", `#${id}`);
@@ -82,11 +122,31 @@ export function CalculatorTabs() {
     }
   }
 
+  function importTreatmentToTransfusion() {
+    setTransfusionFields(cloneVisitForm(treatmentFields));
+    setTransfusionRange({ ...treatmentRange });
+    setTransfusionImported(true);
+  }
+
+  function importTreatmentToCaregiver() {
+    setCaregiverFields({
+      frequency: { ...treatmentFields.frequency },
+      visit: treatmentInput
+        ? hoursToDurationFields(
+            treatmentInput.centerHoursPerVisit + treatmentInput.travelHoursPerVisit,
+          )
+        : { hours: "", minutes: "" },
+      additional: { hours: "", minutes: "" },
+    });
+    setCaregiverRange({ ...treatmentRange });
+    setCaregiverImported(true);
+  }
+
   return (
     <div>
-      <div className="bg-canvas py-5 sm:py-6">
+      <div className="bg-canvas py-3 sm:py-4">
         <div
-          className="container-shell grid grid-cols-3 gap-1 rounded-[1.6rem] border border-line/70 bg-surface p-1.5 shadow-sm"
+          className="container-shell grid grid-cols-2 gap-1 rounded-[1.4rem] border border-line/70 bg-surface p-1.5 shadow-sm sm:grid-cols-4"
           role="tablist"
           aria-label="Cancer care time calculators"
         >
@@ -102,7 +162,7 @@ export function CalculatorTabs() {
               tabIndex={selected === calculator.id ? 0 : -1}
               onClick={() => selectTab(calculator.id)}
               onKeyDown={(event) => handleKeyDown(event, index)}
-              className="relative min-h-14 rounded-[1.2rem] px-1 py-3 text-xs font-bold leading-4 text-slate outline-none transition hover:bg-wash/35 hover:text-ink focus-visible:z-10 focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-teal/20 aria-selected:bg-action aria-selected:text-white min-[375px]:px-2 min-[375px]:text-sm min-[375px]:leading-5 sm:min-h-16 sm:px-5 sm:text-base"
+              className="relative min-h-12 rounded-[1rem] px-2 py-2 text-sm font-bold leading-5 text-slate outline-none transition hover:bg-wash/35 hover:text-ink focus-visible:z-10 focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-teal/20 aria-selected:bg-action aria-selected:text-white sm:min-h-14 sm:px-4 sm:text-base"
             >
               {calculator.label}
             </button>
@@ -110,11 +170,7 @@ export function CalculatorTabs() {
         </div>
       </div>
 
-      <div className="container-shell pb-16 pt-8 sm:pb-20 sm:pt-10 lg:pb-24">
-        <div className="mb-8 rounded-3xl border border-line/70 bg-wash/30 px-5 py-4 text-sm leading-6 text-slate sm:px-6">
-          <p className="font-bold text-ink">Matching entries carry over automatically.</p>
-          <p className="mt-1">When you switch calculators, equivalent visit, time, travel, and schedule-end fields stay filled. Calculator-specific fields remain separate.</p>
-        </div>
+      <div className="container-shell pb-16 pt-4 sm:pb-20 sm:pt-6 lg:pb-24">
         {calculators.map((calculator) => (
           <div
             key={calculator.id}
@@ -127,28 +183,47 @@ export function CalculatorTabs() {
           >
             {calculator.id === "treatment" ? (
               <TreatmentCalculator
-                fields={sharedVisitFields}
-                onFieldsChange={setSharedVisitFields}
-                rangeFields={sharedRangeFields}
-                onRangeFieldsChange={setSharedRangeFields}
+                fields={treatmentFields}
+                onFieldsChange={setTreatmentFields}
+                rangeFields={treatmentRange}
+                onRangeFieldsChange={setTreatmentRange}
               />
             ) : null}
             {calculator.id === "transfusion" ? (
-              <TransfusionCalculator
-                fields={sharedVisitFields}
-                onFieldsChange={setSharedVisitFields}
-                rangeFields={sharedRangeFields}
-                onRangeFieldsChange={setSharedRangeFields}
-              />
+              <>
+                {transfusionImported ? (
+                  <ImportedNotice onReviewed={() => setTransfusionImported(false)} />
+                ) : canReuseTreatment ? (
+                  <ImportNotice onImport={importTreatmentToTransfusion} label="Use my treatment inputs" />
+                ) : null}
+                <TransfusionCalculator
+                  fields={transfusionFields}
+                  onFieldsChange={setTransfusionFields}
+                  rangeFields={transfusionRange}
+                  onRangeFieldsChange={setTransfusionRange}
+                />
+              </>
             ) : null}
             {calculator.id === "caregiver" ? (
-              <CaregiverCalculator
-                visits={sharedVisitFields.visits}
-                onVisitsChange={(visits) =>
-                  setSharedVisitFields((current) => ({ ...current, visits }))
-                }
-                rangeFields={sharedRangeFields}
-                onRangeFieldsChange={setSharedRangeFields}
+              <>
+                {caregiverImported ? (
+                  <ImportedNotice onReviewed={() => setCaregiverImported(false)} />
+                ) : canReuseTreatment ? (
+                  <ImportNotice onImport={importTreatmentToCaregiver} label="Use my treatment schedule" />
+                ) : null}
+                <CaregiverCalculator
+                  fields={caregiverFields}
+                  onFieldsChange={setCaregiverFields}
+                  rangeFields={caregiverRange}
+                  onRangeFieldsChange={setCaregiverRange}
+                />
+              </>
+            ) : null}
+            {calculator.id === "planner" ? (
+              <CombinedCarePlanner
+                treatmentFields={treatmentFields}
+                treatmentRange={treatmentRange}
+                canImportTreatment={Boolean(treatmentInput)}
               />
             ) : null}
           </div>

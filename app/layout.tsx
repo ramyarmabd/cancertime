@@ -3,6 +3,8 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import "./globals.css";
 
+const publicSiteUrl = "https://ramyarmabd.github.io/cancertime";
+
 export const metadata: Metadata = {
   title: {
     default: "CancerTime | Cancer Care Time Calculator",
@@ -14,6 +16,21 @@ export const metadata: Metadata = {
     description: "Estimate the time spent traveling to, receiving, and supporting cancer care.",
     type: "website",
     siteName: "CancerTime",
+    url: publicSiteUrl,
+    images: [
+      {
+        url: `${publicSiteUrl}/og.png`,
+        width: 1733,
+        height: 907,
+        alt: "CancerTime — See the time care takes.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CancerTime | Cancer Care Time Calculator",
+    description: "Estimate the time spent traveling to, receiving, and supporting cancer care.",
+    images: [`${publicSiteUrl}/og.png`],
   },
 };
 

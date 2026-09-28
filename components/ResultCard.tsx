@@ -23,6 +23,11 @@ interface ResultCardProps {
   periodLabel?: string;
   breakdownHeading?: string;
   copyText: string;
+  footerAction?: {
+    href: string;
+    label: string;
+    description: string;
+  };
   children?: React.ReactNode;
 }
 
@@ -36,6 +41,7 @@ export function ResultCard({
   periodLabel,
   breakdownHeading,
   copyText,
+  footerAction,
   children,
 }: ResultCardProps) {
   return (
@@ -82,6 +88,19 @@ export function ResultCard({
         ariaPeriod={periodLabel ? "over the selected schedule" : "per year"}
       />
       {children}
+
+      {footerAction ? (
+        <a
+          href={footerAction.href}
+          className="mt-7 flex items-center justify-between gap-4 rounded-2xl border border-line bg-wash/25 px-4 py-4 text-left outline-none transition hover:border-teal focus-visible:ring-4 focus-visible:ring-teal/20"
+        >
+          <span>
+            <strong className="block text-sm text-ink">{footerAction.label}</strong>
+            <span className="mt-1 block text-xs leading-5 text-slate">{footerAction.description}</span>
+          </span>
+          <span aria-hidden="true" className="text-xl text-teal">→</span>
+        </a>
+      ) : null}
 
       <div className="mt-8 flex flex-col items-start justify-between gap-5 border-t border-line pt-6 sm:flex-row sm:items-center">
         <p className="max-w-xl text-sm leading-6 text-slate">

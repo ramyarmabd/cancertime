@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { SharedVisitFields } from "@/components/CalculatorTabs";
-import { NumberInput, getNumberError } from "@/components/NumberInput";
+import { DurationInput } from "@/components/DurationInput";
+import { FrequencyInput } from "@/components/FrequencyInput";
 import { ResultCard } from "@/components/ResultCard";
 import { ResultPlaceholder } from "@/components/ResultPlaceholder";
 import {
@@ -12,19 +12,20 @@ import {
   type ScheduleRangeFields,
 } from "@/components/ScheduleRangeInput";
 import {
-  INPUT_LIMITS,
-  calculateTreatmentTime,
   calculateVisitTimeRange,
   type ScheduleRange,
   type VisitTimeInput,
 } from "@/lib/calculations";
 import {
+  emptyVisitForm,
+  visitFormToInput,
+  type VisitFormFields,
+} from "@/lib/form-values";
+import {
   formatNumber,
   formatScheduleRange,
   formatSignedDifference,
 } from "@/lib/formatting";
-
-type VisitFields = SharedVisitFields;
 
 interface DisplayVisitResult {
   totalHours: number;
@@ -35,55 +36,19 @@ interface DisplayVisitResult {
   eightHourDays: number;
 }
 
-const emptyFields: VisitFields = { visits: "", center: "", travel: "" };
-
-function parseFields(fields: VisitFields): VisitTimeInput | null {
-  if (
-    fields.visits === "" ||
-    fields.center === "" ||
-    fields.travel === "" ||
-    getNumberError(fields.visits, INPUT_LIMITS.visitsPerMonth) ||
-    getNumberError(fields.center, INPUT_LIMITS.hoursPerVisit) ||
-    getNumberError(fields.travel, INPUT_LIMITS.travelHoursPerVisit)
-  ) {
-    return null;
-  }
-
-  return {
-    visitsPerMonth: Number(fields.visits),
-    centerHoursPerVisit: Number(fields.center),
-    travelHoursPerVisit: Number(fields.travel),
-  };
-}
-
 function getDisplayResult(
   input: VisitTimeInput | null,
-  rangeEnabled: boolean,
   range: ScheduleRange | null,
   rangeHasError: boolean,
 ): DisplayVisitResult | null {
-  if (!input || rangeHasError) return null;
-
-  if (rangeEnabled) {
-    if (!range) return null;
-    const result = calculateVisitTimeRange(input, range);
-    return {
-      totalHours: result.totalHours,
-      hoursPerMonth: result.hoursPerMonth,
-      visits: result.visitsInRange,
-      centerHours: result.centerHoursInRange,
-      travelHours: result.travelHoursInRange,
-      eightHourDays: result.eightHourDays,
-    };
-  }
-
-  const result = calculateTreatmentTime(input);
+  if (!input || !range || rangeHasError) return null;
+  const result = calculateVisitTimeRange(input, range);
   return {
-    totalHours: result.totalHoursPerYear,
+    totalHours: result.totalHours,
     hoursPerMonth: result.hoursPerMonth,
-    visits: result.visitsPerYear,
-    centerHours: result.centerHoursPerYear,
-    travelHours: result.travelHoursPerYear,
+    visits: result.visitsInRange,
+    centerHours: result.centerHoursInRange,
+    travelHours: result.travelHoursInRange,
     eightHourDays: result.eightHourDays,
   };
 }
@@ -94,16 +59,28 @@ function hasVisitRangeConflict(
 ) {
   return Boolean(
     input &&
-      fields.enabled &&
+      fields.mode === "course" &&
       fields.unit === "visits" &&
       Number(fields.value) > 0 &&
       input.visitsPerMonth === 0,
   );
 }
 
+function periodLabel(fields: ScheduleRangeFields, range: ScheduleRange | null) {
+  if (fields.mode === "month") return "1 month";
+  if (fields.mode === "year") return "1 year";
+  return range ? `Defined course · ${formatScheduleRange(range.value, range.unit)}` : undefined;
+}
+
+function totalLabel(fields: ScheduleRangeFields) {
+  if (fields.mode === "month") return "hours/month";
+  if (fields.mode === "year") return "hours/year";
+  return "hours total";
+}
+
 interface TreatmentCalculatorProps {
-  fields: SharedVisitFields;
-  onFieldsChange: (fields: SharedVisitFields) => void;
+  fields: VisitFormFields;
+  onFieldsChange: (fields: VisitFormFields) => void;
   rangeFields: ScheduleRangeFields;
   onRangeFieldsChange: (fields: ScheduleRangeFields) => void;
 }
@@ -114,106 +91,67 @@ export function TreatmentCalculator({
   rangeFields,
   onRangeFieldsChange,
 }: TreatmentCalculatorProps) {
-  const [comparisonFields, setComparisonFields] =
-    useState<VisitFields>(emptyFields);
-
-  const input = useMemo(() => parseFields(fields), [fields]);
-  const comparisonInput = useMemo(
-    () => parseFields(comparisonFields),
-    [comparisonFields],
-  );
-  const scheduleRange = useMemo(
-    () => parseScheduleRange(rangeFields),
-    [rangeFields],
-  );
+  const [comparisonFields, setComparisonFields] = useState<VisitFormFields>(emptyVisitForm);
+  const input = useMemo(() => visitFormToInput(fields), [fields]);
+  const comparisonInput = useMemo(() => visitFormToInput(comparisonFields), [comparisonFields]);
+  const scheduleRange = useMemo(() => parseScheduleRange(rangeFields), [rangeFields]);
   const rangeConflict = hasVisitRangeConflict(input, rangeFields);
-  const comparisonRangeConflict = hasVisitRangeConflict(
-    comparisonInput,
-    rangeFields,
-  );
-  const result = getDisplayResult(
-    input,
-    rangeFields.enabled,
-    scheduleRange,
-    rangeConflict,
-  );
+  const comparisonRangeConflict = hasVisitRangeConflict(comparisonInput, rangeFields);
+  const result = getDisplayResult(input, scheduleRange, rangeConflict);
   const comparisonResult = getDisplayResult(
     comparisonInput,
-    rangeFields.enabled,
     scheduleRange,
     comparisonRangeConflict,
   );
-  const periodLabel =
-    rangeFields.enabled && scheduleRange
-      ? `Ends after ${formatScheduleRange(scheduleRange.value, scheduleRange.unit)}`
-      : undefined;
-
-  function updateField(key: keyof VisitFields, value: string) {
-    onFieldsChange({ ...fields, [key]: value });
-  }
-
-  function updateComparisonField(key: keyof VisitFields, value: string) {
-    setComparisonFields((current) => ({ ...current, [key]: value }));
-  }
+  const selectedPeriod = periodLabel(rangeFields, scheduleRange);
+  const selectedTotalLabel = totalLabel(rangeFields);
 
   function reset() {
-    onFieldsChange(emptyFields);
+    onFieldsChange(emptyVisitForm);
     onRangeFieldsChange(emptyScheduleRange);
-    setComparisonFields(emptyFields);
+    setComparisonFields(emptyVisitForm);
   }
 
   const copyText =
     result && input
-      ? `CancerTime estimate\n\nTreatment visits: ${formatNumber(input.visitsPerMonth)} per month\nAverage clinic time: ${formatNumber(input.centerHoursPerVisit)} hours per visit\nTravel: ${formatNumber(input.travelHoursPerVisit)} hours round trip\n\n${periodLabel ? `Schedule end: ${formatScheduleRange(scheduleRange!.value, scheduleRange!.unit)}\n\nEstimated time over this schedule:\n${formatNumber(result.totalHours)} hours total` : `Estimated annual time:\n${formatNumber(result.totalHours)} hours/year`}\n\nEquivalent to approximately ${formatNumber(result.eightHourDays)} eight-hour days.\n\n${formatNumber(result.centerHours)} hours at the treatment center\n${formatNumber(result.travelHours)} hours traveling\n\nGenerated using CancerTime.`
+      ? `CancerTime treatment estimate\n\nVisit frequency: ${formatNumber(input.visitsPerMonth)} visits per month on average\nTime at the center: ${formatNumber(input.centerHoursPerVisit)} hours per visit\nRound-trip travel: ${formatNumber(input.travelHoursPerVisit)} hours per visit\nEstimate period: ${selectedPeriod}\n\nEstimated time: ${formatNumber(result.totalHours)} ${selectedTotalLabel}\nApproximately ${formatNumber(result.eightHourDays)} eight-hour days\n\n${formatNumber(result.centerHours)} clinic hours\n${formatNumber(result.travelHours)} travel hours\n\nGenerated using CancerTime.`
       : "";
-
-  const isRanged = Boolean(periodLabel);
-  const comparisonUnit = isRanged ? "hours total" : "hours/year";
 
   return (
     <div>
-      <div className="mb-10 max-w-3xl">
+      <div className="mb-5 max-w-3xl">
         <p className="section-kicker">Treatment time</p>
-        <h2 className="mt-3 font-serif text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-          Treatment Time Calculator
+        <h2 className="mt-2 font-serif text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+          Estimate a treatment schedule
         </h2>
-        <p className="mt-5 text-lg leading-8 text-slate">
-          Estimate how much time you spend traveling to and receiving cancer treatment.
-        </p>
       </div>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-10">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-8">
         <form
           onSubmit={(event) => event.preventDefault()}
-          className="rounded-[2rem] border border-line/70 bg-surface p-5 shadow-sm min-[375px]:p-6 sm:p-8"
+          className="rounded-[2rem] border border-line/70 bg-surface p-5 shadow-sm min-[375px]:p-6 sm:p-7"
         >
-          <div className="space-y-9">
-            <NumberInput
-              id="treatment-visits"
-              label="How many cancer-treatment visits do you usually have each month?"
-              value={fields.visits}
-              onChange={(value) => updateField("visits", value)}
-              max={INPUT_LIMITS.visitsPerMonth}
-              placeholder="3"
-              unit="visits / month"
+          <div className="space-y-7">
+            <FrequencyInput
+              id="treatment-frequency"
+              label="Treatment visits"
+              helpText="Enter how often a typical treatment visit occurs."
+              fields={fields.frequency}
+              onChange={(frequency) => onFieldsChange({ ...fields, frequency })}
             />
-            <NumberInput
+            <DurationInput
               id="treatment-center"
-              label="On average, how many hours do you spend at the treatment center during each visit?"
-              value={fields.center}
-              onChange={(value) => updateField("center", value)}
-              max={INPUT_LIMITS.hoursPerVisit}
-              placeholder="5"
-              unit="hours / visit"
+              label="Time at the center"
+              helpText="Include treatment, check-in, and waiting time for one visit."
+              fields={fields.center}
+              onChange={(center) => onFieldsChange({ ...fields, center })}
             />
-            <NumberInput
+            <DurationInput
               id="treatment-travel"
-              label="How long does the total trip to and from your treatment center usually take?"
-              value={fields.travel}
-              onChange={(value) => updateField("travel", value)}
-              max={INPUT_LIMITS.travelHoursPerVisit}
-              placeholder="1.5"
-              unit="hours round trip"
+              label="Round-trip travel"
+              helpText="Total travel time to and from the treatment center."
+              fields={fields.travel}
+              onChange={(travel) => onFieldsChange({ ...fields, travel })}
             />
             <ScheduleRangeInput
               id="treatment-range"
@@ -221,82 +159,81 @@ export function TreatmentCalculator({
               onChange={onRangeFieldsChange}
               combinationError={
                 rangeConflict
-                  ? "A visit-based end point needs more than 0 visits per month."
+                  ? "A visit-based course needs more than 0 visits per month."
                   : null
               }
             />
           </div>
-          <button type="button" onClick={reset} className="button-secondary mt-8">
+          <button type="button" onClick={reset} className="button-secondary mt-7">
             Reset calculator
           </button>
         </form>
 
         {result ? (
           <ResultCard
-            eyebrow={isRanged ? "Your estimated schedule time" : "Your estimated annual time"}
-            periodLabel={periodLabel}
+            eyebrow="Your treatment estimate"
+            periodLabel={selectedPeriod}
             totalHours={result.totalHours}
-            totalLabel={isRanged ? "hours total" : "hours/year"}
+            totalLabel={selectedTotalLabel}
             eightHourDays={result.eightHourDays}
             metrics={[
-              { label: "Hours / month", value: formatNumber(result.hoursPerMonth) },
-              { label: isRanged ? "Visits total" : "Visits / year", value: formatNumber(result.visits) },
-              { label: isRanged ? "Clinic hours" : "Clinic hours / year", value: formatNumber(result.centerHours) },
-              { label: isRanged ? "Travel hours" : "Travel hours / year", value: formatNumber(result.travelHours) },
+              { label: "Monthly average", value: `${formatNumber(result.hoursPerMonth)} hr` },
+              { label: "Visits in period", value: formatNumber(result.visits) },
+              { label: "Clinic time", value: `${formatNumber(result.centerHours)} hr` },
+              { label: "Travel time", value: `${formatNumber(result.travelHours)} hr` },
             ]}
             breakdown={[
-              { label: "Treatment center time", value: result.centerHours },
-              { label: "Travel time", value: result.travelHours, color: "navy" },
+              { label: "Clinic", value: result.centerHours },
+              { label: "Travel", value: result.travelHours, color: "navy" },
             ]}
-            breakdownHeading={isRanged ? "Selected schedule breakdown" : undefined}
+            breakdownHeading="Where the time goes"
             copyText={copyText}
+            footerAction={{
+              href: "#treatment-comparison",
+              label: "Compare another schedule",
+              description: "See the difference using the same estimate period.",
+            }}
           />
         ) : (
-          <ResultPlaceholder calculator="treatment and schedule end" />
+          <ResultPlaceholder prompt="Enter the visit frequency, center time, and travel time to see your estimate." />
         )}
       </div>
 
-      <details className="group mt-12 overflow-hidden rounded-[2rem] border border-line/70 bg-surface shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-6 font-bold text-ink outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-teal/20 sm:px-8">
+      <details id="treatment-comparison" className="group mt-8 scroll-mt-24 overflow-hidden rounded-[2rem] border border-line/70 bg-surface shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 font-bold text-ink outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-teal/20 sm:px-8">
           <span>
             <span className="block text-xl">Compare another schedule</span>
             <span className="mt-1 block text-sm font-normal text-slate">
-              Uses the same selected time range as Schedule A
+              Uses the same estimate period as Schedule A
             </span>
           </span>
           <span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-wash/45 text-2xl transition group-open:rotate-45">+</span>
         </summary>
-        <div className="border-t border-line px-6 py-8 sm:px-8">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-10">
+        <div className="border-t border-line px-6 py-7 sm:px-8">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
             <div>
-              <h3 className="font-serif text-3xl font-bold text-ink">Schedule B</h3>
-              <div className="mt-6 space-y-7">
-                <NumberInput
-                  id="comparison-visits"
-                  label="Treatment visits per month"
-                  value={comparisonFields.visits}
-                  onChange={(value) => updateComparisonField("visits", value)}
-                  max={INPUT_LIMITS.visitsPerMonth}
-                  placeholder="2"
-                  unit="visits / month"
+              <h3 className="font-serif text-2xl font-bold text-ink">Schedule B</h3>
+              <div className="mt-5 space-y-6">
+                <FrequencyInput
+                  id="comparison-frequency"
+                  label="Treatment visits"
+                  helpText="How often does the comparison schedule occur?"
+                  fields={comparisonFields.frequency}
+                  onChange={(frequency) => setComparisonFields((current) => ({ ...current, frequency }))}
                 />
-                <NumberInput
+                <DurationInput
                   id="comparison-center"
-                  label="Time at the treatment center per visit"
-                  value={comparisonFields.center}
-                  onChange={(value) => updateComparisonField("center", value)}
-                  max={INPUT_LIMITS.hoursPerVisit}
-                  placeholder="6"
-                  unit="hours / visit"
+                  label="Time at the center"
+                  helpText="Time for one comparison visit."
+                  fields={comparisonFields.center}
+                  onChange={(center) => setComparisonFields((current) => ({ ...current, center }))}
                 />
-                <NumberInput
+                <DurationInput
                   id="comparison-travel"
-                  label="Round-trip travel time per visit"
-                  value={comparisonFields.travel}
-                  onChange={(value) => updateComparisonField("travel", value)}
-                  max={INPUT_LIMITS.travelHoursPerVisit}
-                  placeholder="2"
-                  unit="hours round trip"
+                  label="Round-trip travel"
+                  helpText="Travel time for one comparison visit."
+                  fields={comparisonFields.travel}
+                  onChange={(travel) => setComparisonFields((current) => ({ ...current, travel }))}
                 />
               </div>
             </div>
@@ -305,35 +242,39 @@ export function TreatmentCalculator({
               {result && comparisonResult ? (
                 <div className="rounded-3xl bg-wash/45 p-6 sm:p-8">
                   <p className="section-kicker">Difference in estimated time burden</p>
-                  {periodLabel ? (
-                    <p className="mt-3 text-sm font-semibold text-slate">{periodLabel}</p>
-                  ) : null}
+                  <p className="mt-3 text-sm font-semibold text-slate">{selectedPeriod}</p>
                   <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl bg-surface p-5 shadow-sm">
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate">Schedule A</p>
-                      <p className="mt-2 text-2xl font-bold text-ink">{formatNumber(result.totalHours)} <span className="text-sm font-medium">{comparisonUnit}</span></p>
-                    </div>
-                    <div className="rounded-2xl bg-surface p-5 shadow-sm">
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate">Schedule B</p>
-                      <p className="mt-2 text-2xl font-bold text-ink">{formatNumber(comparisonResult.totalHours)} <span className="text-sm font-medium">{comparisonUnit}</span></p>
-                    </div>
+                    {[
+                      ["Schedule A", result.totalHours],
+                      ["Schedule B", comparisonResult.totalHours],
+                    ].map(([label, value]) => (
+                      <div key={String(label)} className="rounded-2xl bg-surface p-5 shadow-sm">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate">{label}</p>
+                        <p className="mt-2 text-2xl font-bold text-ink">{formatNumber(Number(value))} <span className="text-sm font-medium">{selectedTotalLabel}</span></p>
+                      </div>
+                    ))}
                     <div className="rounded-2xl bg-surface p-5 shadow-sm">
                       <p className="text-xs font-bold uppercase tracking-wider text-slate">Difference</p>
-                      <p className="mt-2 text-lg font-bold leading-7 text-ink">{formatSignedDifference(comparisonResult.totalHours - result.totalHours, comparisonUnit)}</p>
+                      <p className="mt-2 text-lg font-bold leading-7 text-ink">
+                        {formatSignedDifference(
+                          comparisonResult.totalHours - result.totalHours,
+                          selectedTotalLabel,
+                        )}
+                      </p>
                     </div>
                   </div>
                   <p className="mt-5 text-sm leading-6 text-slate">
                     Equivalent difference: {formatNumber(Math.abs(comparisonResult.eightHourDays - result.eightHourDays))} eight-hour days.
                   </p>
                   <p className="mt-5 border-t border-line pt-5 text-sm leading-6 text-slate">
-                    Time burden is only one aspect of cancer treatment. CancerTime does not compare treatment effectiveness, safety, or medical appropriateness.
+                    Time burden is only one consideration. CancerTime does not compare effectiveness, safety, or medical appropriateness.
                   </p>
                 </div>
               ) : (
                 <div className="rounded-3xl border border-dashed border-line p-8 text-sm leading-6 text-slate">
                   {comparisonRangeConflict
-                    ? "A visit-based end point needs more than 0 visits per month in Schedule B."
-                    : "Complete Schedule A and Schedule B to see a neutral comparison of estimated time."}
+                    ? "A visit-based course needs more than 0 visits per month in Schedule B."
+                    : "Complete both schedules to compare their estimated time."}
                 </div>
               )}
             </div>
