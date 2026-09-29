@@ -1,6 +1,6 @@
 # CancerTime
 
-CancerTime is a static, patient-facing calculator for estimating the time devoted to cancer-related treatment, transfusions, caregiving, and combined care schedules. It supports common visit frequencies, hours-and-minutes entry, explicit estimate periods, grouped trips, and opt-in reuse of treatment inputs. It is educational and research-oriented; it does not provide medical advice or recommend care.
+CancerTime is a static, patient-facing calculator for estimating the time devoted to cancer-related treatment, transfusions, caregiving, and combined care schedules. It supports common visit frequencies, hours-and-minutes entry, explicit estimate periods, grouped trips, opt-in reuse of treatment inputs, exact-date calendar planning, and private PNG result exports. It is educational and research-oriented; it does not provide medical advice or recommend care.
 
 ## Local development
 

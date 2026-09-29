@@ -2,6 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import { CaregiverCalculator } from "@/components/CaregiverCalculator";
+import { CalendarCarePlanner } from "@/components/CalendarCarePlanner";
 import { CombinedCarePlanner } from "@/components/CombinedCarePlanner";
 import {
   emptyScheduleRange,
@@ -24,6 +25,7 @@ const calculators = [
   { id: "transfusion", label: "Transfusion" },
   { id: "caregiver", label: "Caregiver" },
   { id: "planner", label: "Care planner" },
+  { id: "calendar", label: "Calendar" },
 ] as const;
 
 type CalculatorId = (typeof calculators)[number]["id"];
@@ -146,7 +148,7 @@ export function CalculatorTabs() {
     <div>
       <div className="bg-canvas py-3 sm:py-4">
         <div
-          className="container-shell grid grid-cols-2 gap-1 rounded-[1.4rem] border border-line/70 bg-surface p-1.5 shadow-sm sm:grid-cols-4"
+          className="container-shell grid grid-cols-2 gap-1 rounded-[1.4rem] border border-line/70 bg-surface p-1.5 shadow-sm sm:grid-cols-5"
           role="tablist"
           aria-label="Cancer care time calculators"
         >
@@ -162,7 +164,7 @@ export function CalculatorTabs() {
               tabIndex={selected === calculator.id ? 0 : -1}
               onClick={() => selectTab(calculator.id)}
               onKeyDown={(event) => handleKeyDown(event, index)}
-              className="relative min-h-12 rounded-[1rem] px-2 py-2 text-sm font-bold leading-5 text-slate outline-none transition hover:bg-wash/35 hover:text-ink focus-visible:z-10 focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-teal/20 aria-selected:bg-action aria-selected:text-white sm:min-h-14 sm:px-4 sm:text-base"
+              className={`relative min-h-12 rounded-[1rem] px-2 py-2 text-sm font-bold leading-5 text-slate outline-none transition hover:bg-wash/35 hover:text-ink focus-visible:z-10 focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-teal/20 aria-selected:bg-action aria-selected:text-white sm:min-h-14 sm:px-4 sm:text-base ${calculator.id === "calendar" ? "col-span-2 sm:col-span-1" : ""}`}
             >
               {calculator.label}
             </button>
@@ -226,6 +228,7 @@ export function CalculatorTabs() {
                 canImportTreatment={Boolean(treatmentInput)}
               />
             ) : null}
+            {calculator.id === "calendar" ? <CalendarCarePlanner /> : null}
           </div>
         ))}
       </div>

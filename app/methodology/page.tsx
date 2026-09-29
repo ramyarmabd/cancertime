@@ -46,6 +46,7 @@ export default function MethodologyPage() {
               <a href="#frequency" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Visit frequency</a>
               <a href="#combined" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Combined planner</a>
               <a href="#caregiver" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Caregiver time</a>
+              <a href="#calendar" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Calendar planner</a>
               <a href="#schedule-range" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Estimate period</a>
               <a href="#example" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Worked example</a>
               <a href="#limitations" className="shrink-0 rounded-full border border-line bg-surface px-4 py-2 hover:border-teal hover:text-teal lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-l-transparent lg:bg-transparent">Limitations</a>
@@ -116,6 +117,16 @@ export default function MethodologyPage() {
                   </div>
                 ))}
               </dl>
+            </section>
+
+            <section id="calendar" className="mt-16 scroll-mt-28 border-t border-line pt-14">
+              <p className="section-kicker">Exact-date calendar</p>
+              <h2 className="mt-3 font-serif text-3xl font-bold text-ink">Calculating from scheduled appointments</h2>
+              <p className="mt-5 leading-8 text-slate">The calendar planner creates individual dates from a one-time, weekly, every-two-weeks, every-three-weeks, or monthly schedule. The total is the sum of care-location and travel time across those dated appointments.</p>
+              <div className="mt-7 rounded-3xl bg-wash/35 p-6 text-sm leading-7 text-slate">
+                <p><strong className="text-ink">Calendar dates are illustrative.</strong> Monthly schedules keep the selected day when possible and use the last day of a shorter month when needed. Actual clinical appointments can change, so each generated date should be reviewed.</p>
+                <p className="mt-3">Calendar entries and exported images are created locally in the browser. CancerTime does not send the dates or results to a server.</p>
+              </div>
             </section>
 
             <section id="schedule-range" className="mt-16 scroll-mt-28 border-t border-line pt-14">

@@ -3,7 +3,7 @@ import { CalculatorTabs } from "@/components/CalculatorTabs";
 
 export const metadata: Metadata = {
   title: { absolute: "CancerTime Calculator | Estimate Cancer Care Time Burden" },
-  description: "Estimate treatment, transfusion, and caregiver time using information you enter.",
+  description: "Estimate treatment, transfusion, caregiver, combined care, and exact-date calendar time using information you enter.",
 };
 
 export default function CalculatorPage() {

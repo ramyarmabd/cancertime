@@ -3,27 +3,34 @@ import Link from "next/link";
 const calculators = [
   {
     number: "01",
+    title: "Calendar Planner",
+    description: "Put treatment, imaging, labs, and appointments on exact dates and total the time.",
+    href: "/calculator#calendar",
+    link: "Plan with dates",
+  },
+  {
+    number: "02",
     title: "Combined Care Planner",
     description: "Add treatment, labs, scans, transfusions, and other visits in one estimate.",
     href: "/calculator#planner",
     link: "Plan combined care",
   },
   {
-    number: "02",
+    number: "03",
     title: "Treatment Time",
     description: "Estimate the time spent traveling to and receiving cancer treatment.",
     href: "/calculator#treatment",
     link: "Estimate treatment time",
   },
   {
-    number: "03",
+    number: "04",
     title: "Transfusion Time",
     description: "Estimate the time associated with blood transfusion visits.",
     href: "/calculator#transfusion",
     link: "Estimate transfusion time",
   },
   {
-    number: "04",
+    number: "05",
     title: "Caregiver Time",
     description: "Estimate the time family members or caregivers spend supporting cancer-related care.",
     href: "/calculator#caregiver",
@@ -106,11 +113,11 @@ export default function HomePage() {
 
       <section className="container-shell py-20 sm:py-28" aria-labelledby="choose-calculator">
         <div className="max-w-3xl">
-          <p className="section-kicker">Four ways to estimate</p>
+          <p className="section-kicker">Five ways to estimate</p>
           <h2 id="choose-calculator" className="mt-4 font-serif text-5xl font-bold tracking-tight text-ink sm:text-6xl">Choose a calculator</h2>
-          <p className="mt-5 text-lg leading-8 text-slate">Each calculator uses only the schedule details you provide. Start with whichever estimate is most useful to you.</p>
+          <p className="mt-5 text-lg leading-8 text-slate">Each calculator uses only the schedule details you provide. Start with whichever estimate is most useful to you. Every completed result can be exported as a shareable image.</p>
         </div>
-        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {calculators.map((calculator, index) => (
             <article key={calculator.title} className={`rounded-[2rem] border border-line/60 p-7 shadow-sm sm:p-8 ${index === 1 ? "bg-wash/35" : index === 2 ? "bg-gold/25" : "bg-surface"}`}>
               <p className="font-serif text-sm font-bold text-teal">{calculator.number}</p>

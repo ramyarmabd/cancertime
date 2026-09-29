@@ -1,4 +1,5 @@
 import { CopyButton } from "@/components/CopyButton";
+import { ResultImageButton } from "@/components/ResultImageButton";
 import { TimeBreakdown } from "@/components/TimeBreakdown";
 import { formatNumber } from "@/lib/formatting";
 
@@ -106,7 +107,18 @@ export function ResultCard({
         <p className="max-w-xl text-sm leading-6 text-slate">
           This estimate is based entirely on the information you entered.
         </p>
-        <CopyButton text={copyText} />
+        <div className="flex flex-wrap gap-2">
+          <ResultImageButton
+            eyebrow={eyebrow}
+            totalHours={totalHours}
+            totalLabel={totalLabel}
+            eightHourDays={eightHourDays}
+            metrics={metrics}
+            breakdown={breakdown}
+            periodLabel={periodLabel}
+          />
+          <CopyButton text={copyText} />
+        </div>
       </div>
       <p className="mt-5 text-xs leading-5 text-slate">
         Eight-hour-day equivalents are shown only to make the amount of time easier to understand. They do not represent consecutive days lost.
