@@ -82,6 +82,92 @@ function categoryStyle(category: string) {
   return "bg-canvas text-ink";
 }
 
+function CalendarPrintSheet({
+  events,
+  result,
+}: {
+  events: CalendarEventInput[];
+  result: NonNullable<ReturnType<typeof calculateCalendarPlan>>;
+}) {
+  const months = [...new Set(events.map((event) => event.date.slice(0, 7)))].sort();
+  const eventsByDate = new Map<string, CalendarEventInput[]>();
+  events.forEach((event) => {
+    const current = eventsByDate.get(event.date) ?? [];
+    current.push(event);
+    eventsByDate.set(event.date, current);
+  });
+
+  return (
+    <section className="calendar-print-sheet" aria-hidden="true">
+      <header className="calendar-print-header">
+        <div>
+          <p className="calendar-print-brand">CancerTime</p>
+          <h1>Care calendar</h1>
+          <p>{formatDate(result.firstDate)} – {formatDate(result.lastDate)}</p>
+        </div>
+        <dl className="calendar-print-summary">
+          <div><dt>Appointments</dt><dd>{result.appointments}</dd></div>
+          <div><dt>Total time</dt><dd>{formatNumber(result.totalHours)} hr</dd></div>
+          <div><dt>At care locations</dt><dd>{formatNumber(result.centerHours)} hr</dd></div>
+          <div><dt>Travel</dt><dd>{formatNumber(result.travelHours)} hr</dd></div>
+        </dl>
+      </header>
+
+      {months.map((month) => (
+        <section key={month} className="calendar-print-month">
+          <h2>{monthLabel(month)}</h2>
+          <div className="calendar-print-weekdays">
+            {weekdays.map((day) => <span key={day}>{day}</span>)}
+          </div>
+          <div className="calendar-print-grid">
+            {daysForMonth(month).map((date, index) => {
+              if (!date) return <div key={`blank-${index}`} className="calendar-print-day calendar-print-day-empty" />;
+              const dayEvents = eventsByDate.get(date) ?? [];
+              return (
+                <div key={date} className={`calendar-print-day ${dayEvents.length ? "calendar-print-day-active" : ""}`}>
+                  <strong>{Number(date.slice(-2))}</strong>
+                  {dayEvents.map((event) => (
+                    <div key={event.id} className="calendar-print-event">
+                      <b>{event.title}</b>
+                      <span>{event.category} · {formatNumber(event.centerHours + event.travelHours)} hr</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+
+      <section className="calendar-print-appointments">
+        <h2>Appointment details</h2>
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Care</th><th>Appointment</th><th>At location</th><th>Travel</th><th>Total</th></tr>
+          </thead>
+          <tbody>
+            {events.map((event) => (
+              <tr key={event.id}>
+                <td>{formatDate(event.date, { month: "short", day: "numeric", year: "numeric" })}</td>
+                <td>{event.category}</td>
+                <td>{event.title}</td>
+                <td>{formatNumber(event.centerHours)} hr</td>
+                <td>{formatNumber(event.travelHours)} hr</td>
+                <td><strong>{formatNumber(event.centerHours + event.travelHours)} hr</strong></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <footer className="calendar-print-footer">
+        <p>Created with CancerTime from information entered by the user. Dates should be confirmed with the care team.</p>
+        <p>This is an educational planning aid, not medical advice.</p>
+      </footer>
+    </section>
+  );
+}
+
 export function CalendarCarePlanner() {
   const today = useMemo(() => localIsoDate(), []);
   const [events, setEvents] = useState<CalendarEventInput[]>([]);
@@ -278,6 +364,21 @@ export function CalendarCarePlanner() {
 
         <div className="space-y-6">
           <section className="overflow-hidden rounded-[2rem] border border-line/70 bg-surface p-4 shadow-sm min-[375px]:p-5 sm:p-7" aria-label="Care calendar">
+            <div className="mb-5 flex flex-col gap-3 border-b border-line pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal">Printable care plan</p>
+                <p className="mt-1 text-sm leading-6 text-slate">Print every scheduled month and appointment detail, or save it as a PDF.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                disabled={!result}
+                className="button-primary shrink-0 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <span aria-hidden="true">▤</span>
+                Print / save PDF
+              </button>
+            </div>
             <div className="flex items-center justify-between gap-3">
               <button type="button" onClick={() => setVisibleMonth((month) => shiftMonth(month, -1))} className="button-secondary size-11 !p-0" aria-label="Previous month">←</button>
               <div className="text-center">
@@ -360,6 +461,7 @@ export function CalendarCarePlanner() {
               ]}
               breakdownHeading="Where the scheduled time goes"
               copyText={copyText}
+              imageExport={false}
             >
               <div className="mt-7 border-t border-line pt-6">
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate">Time by care type</p>
@@ -382,6 +484,8 @@ export function CalendarCarePlanner() {
           ) : null}
         </div>
       </div>
+
+      {result ? <CalendarPrintSheet events={sortedEvents} result={result} /> : null}
     </div>
   );
 }

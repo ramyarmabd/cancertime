@@ -115,7 +115,7 @@ export default function HomePage() {
         <div className="max-w-3xl">
           <p className="section-kicker">Five ways to estimate</p>
           <h2 id="choose-calculator" className="mt-4 font-serif text-5xl font-bold tracking-tight text-ink sm:text-6xl">Choose a calculator</h2>
-          <p className="mt-5 text-lg leading-8 text-slate">Each calculator uses only the schedule details you provide. Start with whichever estimate is most useful to you. Every completed result can be exported as a shareable image.</p>
+          <p className="mt-5 text-lg leading-8 text-slate">Each calculator uses only the schedule details you provide. Start with whichever estimate is most useful to you. Results can be copied or exported, and dated plans can be printed or saved as a PDF.</p>
         </div>
         <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {calculators.map((calculator, index) => (

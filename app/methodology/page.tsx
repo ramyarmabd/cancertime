@@ -125,7 +125,7 @@ export default function MethodologyPage() {
               <p className="mt-5 leading-8 text-slate">The calendar planner creates individual dates from a one-time, weekly, every-two-weeks, every-three-weeks, or monthly schedule. The total is the sum of care-location and travel time across those dated appointments.</p>
               <div className="mt-7 rounded-3xl bg-wash/35 p-6 text-sm leading-7 text-slate">
                 <p><strong className="text-ink">Calendar dates are illustrative.</strong> Monthly schedules keep the selected day when possible and use the last day of a shorter month when needed. Actual clinical appointments can change, so each generated date should be reviewed.</p>
-                <p className="mt-3">Calendar entries and exported images are created locally in the browser. CancerTime does not send the dates or results to a server.</p>
+                <p className="mt-3">Calendar entries, printable calendars, and optional result images are created locally in the browser. CancerTime does not send the dates or results to a server.</p>
               </div>
             </section>
 

@@ -24,6 +24,7 @@ interface ResultCardProps {
   periodLabel?: string;
   breakdownHeading?: string;
   copyText: string;
+  imageExport?: boolean;
   footerAction?: {
     href: string;
     label: string;
@@ -42,6 +43,7 @@ export function ResultCard({
   periodLabel,
   breakdownHeading,
   copyText,
+  imageExport = true,
   footerAction,
   children,
 }: ResultCardProps) {
@@ -108,15 +110,17 @@ export function ResultCard({
           This estimate is based entirely on the information you entered.
         </p>
         <div className="flex flex-wrap gap-2">
-          <ResultImageButton
-            eyebrow={eyebrow}
-            totalHours={totalHours}
-            totalLabel={totalLabel}
-            eightHourDays={eightHourDays}
-            metrics={metrics}
-            breakdown={breakdown}
-            periodLabel={periodLabel}
-          />
+          {imageExport ? (
+            <ResultImageButton
+              eyebrow={eyebrow}
+              totalHours={totalHours}
+              totalLabel={totalLabel}
+              eightHourDays={eightHourDays}
+              metrics={metrics}
+              breakdown={breakdown}
+              periodLabel={periodLabel}
+            />
+          ) : null}
           <CopyButton text={copyText} />
         </div>
       </div>

@@ -163,3 +163,219 @@
     width: min(100% - 3rem, 74rem);
   }
 }
+
+.calendar-print-sheet {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 0.45in;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #2e2942 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .calendar-print-sheet,
+  .calendar-print-sheet * {
+    visibility: visible !important;
+  }
+
+  .calendar-print-sheet {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    background: #ffffff;
+    color: #2e2942;
+    font-family: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
+    font-size: 9pt;
+    line-height: 1.35;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .calendar-print-header {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 0.35in;
+    align-items: end;
+    margin-bottom: 0.24in;
+    padding-bottom: 0.2in;
+    border-bottom: 2px solid #5b4e83;
+  }
+
+  .calendar-print-brand {
+    margin: 0 0 0.06in;
+    color: #5b4e83;
+    font-size: 14pt;
+    font-weight: 800;
+  }
+
+  .calendar-print-header h1,
+  .calendar-print-month h2,
+  .calendar-print-appointments h2 {
+    margin: 0;
+    color: #2e2942;
+    font-weight: 800;
+  }
+
+  .calendar-print-header h1 {
+    font-size: 26pt;
+    line-height: 1.05;
+  }
+
+  .calendar-print-header p {
+    margin: 0.06in 0 0;
+  }
+
+  .calendar-print-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.08in;
+    margin: 0;
+  }
+
+  .calendar-print-summary div {
+    min-height: 0.62in;
+    padding: 0.1in 0.12in;
+    border-radius: 0.12in;
+    background: #f2eae0;
+  }
+
+  .calendar-print-summary dt {
+    color: #5e5868;
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .calendar-print-summary dd {
+    margin: 0.04in 0 0;
+    font-size: 14pt;
+    font-weight: 800;
+  }
+
+  .calendar-print-month {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .calendar-print-month h2,
+  .calendar-print-appointments h2 {
+    margin-bottom: 0.12in;
+    font-size: 18pt;
+  }
+
+  .calendar-print-weekdays,
+  .calendar-print-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .calendar-print-weekdays span {
+    padding: 0.06in;
+    background: #5b4e83;
+    color: #ffffff;
+    font-size: 8pt;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .calendar-print-day {
+    min-height: 0.73in;
+    padding: 0.06in;
+    border-right: 1px solid #d7cbdb;
+    border-bottom: 1px solid #d7cbdb;
+    overflow: hidden;
+  }
+
+  .calendar-print-day:nth-child(7n + 1) {
+    border-left: 1px solid #d7cbdb;
+  }
+
+  .calendar-print-day-active {
+    background: #eef6f7;
+  }
+
+  .calendar-print-day > strong {
+    display: block;
+    margin-bottom: 0.03in;
+    font-size: 9pt;
+  }
+
+  .calendar-print-event {
+    margin-top: 0.03in;
+    padding: 0.035in 0.05in;
+    border-left: 3px solid #5b4e83;
+    background: #f2eae0;
+    font-size: 6.8pt;
+    line-height: 1.2;
+  }
+
+  .calendar-print-event b,
+  .calendar-print-event span {
+    display: block;
+  }
+
+  .calendar-print-event span {
+    margin-top: 0.015in;
+    color: #5e5868;
+  }
+
+  .calendar-print-appointments {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .calendar-print-appointments table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .calendar-print-appointments th {
+    padding: 0.08in;
+    background: #5b4e83;
+    color: #ffffff;
+    font-size: 7.5pt;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .calendar-print-appointments td {
+    padding: 0.08in;
+    border-bottom: 1px solid #d7cbdb;
+    vertical-align: top;
+  }
+
+  .calendar-print-appointments tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .calendar-print-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.3in;
+    margin-top: 0.2in;
+    padding-top: 0.12in;
+    border-top: 1px solid #d7cbdb;
+    color: #5e5868;
+    font-size: 7.5pt;
+  }
+
+  .calendar-print-footer p {
+    margin: 0;
+  }
+}
